@@ -6,7 +6,7 @@ GITEA_SDK_TEST_URL ?= http://localhost:3000
 GITEA_SDK_TEST_USERNAME ?= test01
 GITEA_SDK_TEST_PASSWORD ?= test01
 
-PACKAGE := code.gitea.io/sdk/gitea
+PACKAGE := github.com/gage-technologies/gitea-go/gitea
 
 GITEA_DL := https://dl.gitea.io/gitea/main/gitea-main-
 UNAME_S := $(shell uname -s)

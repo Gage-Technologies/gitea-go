@@ -1,4 +1,4 @@
-module code.gitea.io/sdk/gitea
+module github.com/gage-technologies/gitea-go/gitea
 
 go 1.13
 

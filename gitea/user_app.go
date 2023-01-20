@@ -40,6 +40,14 @@ func (c *Client) ListAccessTokens(opts ListAccessTokensOptions) ([]*AccessToken,
 	return tokens, resp, err
 }
 
+// ListAccessTokensAdmin lists all the access tokens of any user
+func (c *Client) ListAccessTokensAdmin(user string, opts ListAccessTokensOptions) ([]*AccessToken, *Response, error) {
+	opts.setDefaults()
+	tokens := make([]*AccessToken, 0, opts.PageSize)
+	resp, err := c.getParsedResponse("GET", fmt.Sprintf("/users/%s/tokens?%s", url.PathEscape(user), opts.getURLQuery().Encode()), jsonHeader, nil, &tokens)
+	return tokens, resp, err
+}
+
 // CreateAccessTokenOption options when create access token
 type CreateAccessTokenOption struct {
 	Name string `json:"name"`
@@ -59,6 +67,17 @@ func (c *Client) CreateAccessToken(opt CreateAccessTokenOption) (*AccessToken, *
 	}
 	t := new(AccessToken)
 	resp, err := c.getParsedResponse("POST", fmt.Sprintf("/users/%s/tokens", url.PathEscape(username)), jsonHeader, bytes.NewReader(body), t)
+	return t, resp, err
+}
+
+// CreateAccessTokenAdmin create one access for any user token with options
+func (c *Client) CreateAccessTokenAdmin(user string, opt CreateAccessTokenOption) (*AccessToken, *Response, error) {
+	body, err := json.Marshal(&opt)
+	if err != nil {
+		return nil, nil, err
+	}
+	t := new(AccessToken)
+	resp, err := c.getParsedResponse("POST", fmt.Sprintf("/users/%s/tokens", url.PathEscape(user)), jsonHeader, bytes.NewReader(body), t)
 	return t, resp, err
 }
 
@@ -86,5 +105,25 @@ func (c *Client) DeleteAccessToken(value interface{}) (*Response, error) {
 	}
 
 	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/users/%s/tokens/%s", url.PathEscape(username), url.PathEscape(token)), jsonHeader, nil)
+	return resp, err
+}
+
+// DeleteAccessTokenAdmin delete token for any user, identified by ID and if not available by name
+func (c *Client) DeleteAccessTokenAdmin(user string, value interface{}) (*Response, error) {
+	token := ""
+
+	switch reflect.ValueOf(value).Kind() {
+	case reflect.Int64:
+		token = fmt.Sprintf("%d", value.(int64))
+	case reflect.String:
+		if err := c.checkServerVersionGreaterThanOrEqual(version1_13_0); err != nil {
+			return nil, err
+		}
+		token = value.(string)
+	default:
+		return nil, fmt.Errorf("only string and int64 supported")
+	}
+
+	_, resp, err := c.getResponse("DELETE", fmt.Sprintf("/users/%s/tokens/%s", url.PathEscape(user), url.PathEscape(token)), jsonHeader, nil)
 	return resp, err
 }
